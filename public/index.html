@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Album example for Bootstrap</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.3/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="./css/album.css" rel="stylesheet">
+  </head>
+
+  <body>
+
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
+      <a href="index.html" class="navbar-brand d-flex align-items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+        <strong>六都文藝活動資訊站</strong>
+      </a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarCollapse">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item" id="nav_tp">
+            <a class="nav-link" href="index.html?city=TP">台北</a>
+          </li>
+          <li class="nav-item" id="nav_ntp">
+            <a class="nav-link" href="index.html?city=NTP">新北</a>
+          </li>
+          <li class="nav-item" id="nav_ty">
+            <a class="nav-link" href="index.html?city=TY">桃園</a>
+          </li>
+          <li class="nav-item" id="nav_tc">
+            <a class="nav-link" href="index.html?city=TC">台中</a>
+          </li>
+          <li class="nav-item" id="nav_tn">
+            <a class="nav-link" href="index.html?city=TN">台南</a>
+          </li>
+          <li class="nav-item" id="nav_kh">
+            <a class="nav-link" href="index.html?city=KH">高雄</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main role="main">
+
+      <section class="jumbotron text-center">
+        <div class="container">
+          <h1 class="jumbotron-heading">活動資料應用範例網站</h1>
+          <p class="lead text-muted">本站原始碼以 Apache 2.0 授權，開放原始碼專案放置於 <a href="https://github.com/ericpi/event-portal">Github</a>，資料來源應用 <a href="https://developer.kkbox.com/">KKBOX Open API</a> 資料集，歡迎參照使用。</p>
+        </div>
+      </section>
+
+      <div class="album py-5 bg-light">
+        <div class="container" id="event_list">
+<!--
+load data
+-->
+        </div>
+      </div>
+
+    </main>
+
+    <footer class="text-muted">
+      <div class="container">
+        <p class="float-right">
+          <a href="#">Back to top</a>
+        </p>
+      </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.5.3/umd/popper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.3/js/bootstrap.min.js"></script>
+    <script>
+        var city_val = (new URL(location.href)).searchParams.get('city')
+        var city_arg = (city_val == undefined || city_val == null || city_val == '') ? 'tp' : city_val.toString().toLowerCase();
+        var artist = {};
+        var event_list = [];
+        var html_elem = [];
+
+        (function() {
+            $.getJSON("api/events?city=" + city_arg).done(function(ev_list) {
+                event_list = ev_list.data;
+            }).then($.getJSON("json/artist_map.json").done(function(artist_map) {
+                artist = artist_map;
+            })).then(function () {
+                city_event(city_val);
+            }).then(function() {
+                var event_photo, event_description, event_title;
+
+                html_elem.push('<div class="row">');
+                $.each(event_list, function (ev_id, event_info) {
+                    event_photo = 'https://i.kfs.io/muser/global/131527099v9/cropresize/600x600.jpg';
+                    event_description = (event_info.description.length > 256) ? event_info.description.slice(0, 253) + '...' : event_info.description;
+                    event_title = (event_info.title.length > 17) ? event_info.title.slice(0, 15) + '..' : event_info.title;
+                    $.each(artist, function (artist_name, artist_info) {
+                        if(event_info.title.indexOf(artist_name) >= 0 ||
+                           event_info.description.indexOf(artist_name) >= 0) {
+                            event_photo = artist_info.photo_url;
+                            return false;
+                        }
+                    });
+                    html_elem.push(
+                        '<div class="col-md-4" id="">' + 
+                        '  <div class="card mb-4 box-shadow">' +
+                        '    <img class="card-img-top" src="' + event_photo + '" alt="Card image cap">' +
+                        '    <div class="card-body">' +
+                        '      <p class="card-text">' + event_description + '</p>' +
+                        '      <small class="text-muted">' + event_info.event_date + '</small>' + 
+                        '      <div class="d-flex justify-content-between align-items-center">' +
+                        '        <div class="btn-group">' +
+                        '          <button type="button" class="btn btn-sm btn-outline-secondary">' + event_title + '</button>' +
+                        '        </div>' +
+                        '      </div>' +
+                        '    </div>' +
+                        '  </div>' +
+                        '</div>' 
+                    );
+                });
+                html_elem.push('</div>');
+
+                $("#event_list").html(html_elem.join(''));
+            });
+        }) ();
+
+        function city_event(city_val) {
+            switch(city_val) {
+                case "TP":
+                default:
+                    $("#nav_tp").addClass("active"); 
+                    break;
+                case "NTP":
+                    $("#nav_ntp").addClass("active"); 
+                    break;
+                case "TY":
+                    $("#nav_ty").addClass("active"); 
+                    break;
+                case "TC":
+                    $("#nav_tc").addClass("active"); 
+                    break;
+                case "TN":
+                    $("#nav_tn").addClass("active"); 
+                    break;
+                case "KH":
+                    $("#nav_kh").addClass("active"); 
+                    break;
+            }
+        }
+    </script>
+  </body>
+</html>
